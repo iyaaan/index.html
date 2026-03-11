@@ -1,0 +1,640 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Futures Calculator</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+* { margin:0; padding:0; box-sizing:border-box; }
+
+:root {
+  --bg:       #F0F2F5;
+  --card:     #FFFFFF;
+  --border:   #E2E6ED;
+  --text:     #111827;
+  --sub:      #6B7280;
+  --light:    #9CA3AF;
+  --accent:   #2563EB;
+  --accent-l: #EFF6FF;
+  --green:    #059669;
+  --green-l:  #ECFDF5;
+  --red:      #DC2626;
+  --red-l:    #FEF2F2;
+  --yellow:   #D97706;
+  --yellow-l: #FFFBEB;
+  --shadow:   0 1px 3px rgba(0,0,0,.08), 0 1px 2px rgba(0,0,0,.04);
+  --shadow-md:0 4px 16px rgba(0,0,0,.08);
+}
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: 'DM Sans', sans-serif;
+  min-height: 100vh;
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.app { max-width: 820px; margin: 0 auto; padding: 24px 16px 60px; }
+
+/* Header */
+.header {
+  display: flex; align-items: center; justify-content: space-between;
+  margin-bottom: 20px; flex-wrap:wrap; gap:12px;
+}
+.header-left { display:flex; align-items:center; gap:10px; }
+.logo {
+  width: 38px; height: 38px; border-radius: 10px;
+  background: var(--accent); display:flex; align-items:center; justify-content:center;
+  font-size: 20px; flex-shrink:0; box-shadow:0 2px 8px rgba(37,99,235,.35);
+}
+.header h1 { font-size: 18px; font-weight: 700; }
+.header p  { font-size: 12px; color: var(--sub); }
+
+/* Segment */
+.seg { display:inline-flex; background:var(--border); border-radius:9px; padding:3px; gap:2px; }
+.seg-btn {
+  padding: 6px 18px; border:none; border-radius:7px;
+  background:transparent; color:var(--sub);
+  font-family:'DM Sans',sans-serif; font-size:13px; font-weight:600;
+  cursor:pointer; transition:all .18s; white-space:nowrap;
+}
+.seg-btn.active { background:#fff; color:var(--text); box-shadow:var(--shadow); }
+
+/* Card */
+.card {
+  background: var(--card); border-radius: 16px;
+  border: 1px solid var(--border); box-shadow: var(--shadow);
+  padding: 20px; margin-bottom: 12px;
+}
+.card-label {
+  font-size: 11px; font-weight: 700; letter-spacing: .08em;
+  text-transform: uppercase; color: var(--sub); margin-bottom: 16px;
+}
+
+/* Grid */
+.row   { display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+.row3  { display:grid; grid-template-columns:1fr 1fr 1fr; gap:12px; }
+@media(max-width:520px){ .row3{ grid-template-columns:1fr 1fr; } }
+@media(max-width:380px){ .row,.row3{ grid-template-columns:1fr; } }
+
+/* Field */
+.field { display:flex; flex-direction:column; gap:5px; }
+.field > label { font-size:12px; font-weight:600; color:var(--sub); }
+
+.input-box {
+  display:flex; align-items:stretch;
+  background: var(--bg); border: 1.5px solid var(--border);
+  border-radius: 10px; overflow:hidden;
+  transition: border-color .15s, box-shadow .15s;
+  height:44px;
+}
+.input-box:focus-within {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px rgba(37,99,235,.12);
+  background: #fff;
+}
+.input-box input {
+  flex:1; border:none; background:transparent;
+  padding: 0 12px; font-family:'DM Mono',monospace;
+  font-size: 14px; font-weight:500; color:var(--text);
+  outline:none; min-width:0;
+  -moz-appearance:textfield;
+}
+.input-box input::-webkit-outer-spin-button,
+.input-box input::-webkit-inner-spin-button { -webkit-appearance:none; }
+
+.unit {
+  padding: 0 12px; font-size: 12px; font-weight: 600;
+  color: var(--sub); flex-shrink:0; display:flex; align-items:center;
+  border-left: 1px solid var(--border); background:rgba(0,0,0,.02);
+}
+
+/* Margin mode toggle */
+.margin-mode { display:flex; border-left:1px solid var(--border); }
+.mmode-btn {
+  padding: 0 12px; border:none; background:transparent;
+  font-family:'DM Sans',sans-serif; font-size:12px; font-weight:700;
+  color: var(--sub); cursor:pointer; transition:all .15s; border-right:1px solid var(--border);
+}
+.mmode-btn:last-child { border-right:none; }
+.mmode-btn.active { background:var(--accent); color:#fff; }
+
+.hint { font-size:11px; color:var(--light); font-family:'DM Mono',monospace; min-height:16px; }
+.hint.ok   { color:var(--green); }
+.hint.warn { color:var(--yellow); }
+.hint.info { color:var(--sub); }
+
+/* Direction */
+.dir-row { display:grid; grid-template-columns:1fr 1fr; gap:8px; }
+.dir-btn {
+  padding: 12px 0; border-radius: 10px;
+  border: 1.5px solid var(--border); background: var(--bg);
+  cursor:pointer; display:flex; align-items:center; justify-content:center; gap:6px;
+  font-family:'DM Sans',sans-serif; font-size:14px; font-weight:700;
+  color: var(--sub); transition:all .18s;
+}
+.dir-btn:hover:not(.active) { background:#fff; border-color:#B0BAC9; }
+.dir-btn.long.active  { background:var(--green-l); border-color:var(--green);  color:var(--green); }
+.dir-btn.short.active { background:var(--red-l);   border-color:var(--red);    color:var(--red); }
+
+/* Leverage */
+.lev-header { display:flex; align-items:center; justify-content:space-between; margin-bottom:10px; }
+.lev-val { font-family:'DM Mono',monospace; font-size:24px; font-weight:500; color:var(--accent); }
+.lev-sub { font-size:11px; color:var(--sub); margin-top:1px; }
+.lev-risk {
+  font-size:11px; font-weight:700; padding:4px 12px;
+  border-radius:20px; letter-spacing:.03em;
+}
+.risk-low  { background:var(--green-l); color:var(--green); }
+.risk-med  { background:var(--yellow-l); color:var(--yellow); }
+.risk-high { background:var(--red-l); color:var(--red); }
+
+input[type=range] {
+  width:100%; height:5px; border-radius:3px;
+  -webkit-appearance:none; outline:none; cursor:pointer;
+  background:var(--border);
+}
+input[type=range]::-webkit-slider-thumb {
+  -webkit-appearance:none; width:20px; height:20px;
+  border-radius:50%; background:#fff;
+  border:2.5px solid var(--accent);
+  box-shadow:0 1px 4px rgba(0,0,0,.2); cursor:pointer;
+  transition:transform .1s;
+}
+input[type=range]::-webkit-slider-thumb:hover { transform:scale(1.2); }
+
+.lev-presets { display:flex; gap:6px; flex-wrap:wrap; margin-top:10px; }
+.lp {
+  padding:5px 12px; border-radius:7px;
+  border:1.5px solid var(--border); background:var(--bg);
+  font-family:'DM Mono',monospace; font-size:12px; font-weight:500;
+  color:var(--sub); cursor:pointer; transition:all .15s;
+}
+.lp:hover  { border-color:#B0BAC9; color:var(--text); background:#fff; }
+.lp.active { border-color:var(--accent); background:var(--accent-l); color:var(--accent); font-weight:700; }
+
+.divider { height:1px; background:var(--border); margin:18px 0; }
+
+/* Mode info */
+.mode-info {
+  display:flex; align-items:flex-start; gap:10px;
+  padding:12px 16px; border-radius:12px;
+  font-size:13px; line-height:1.6; margin-bottom:14px;
+}
+.mode-info.isolated { background:var(--yellow-l); border:1px solid #FDE68A; color:#92400E; }
+.mode-info.cross    { background:var(--accent-l);  border:1px solid #BFDBFE; color:#1E3A8A; }
+.mode-icon { font-size:18px; flex-shrink:0; margin-top:1px; }
+.mode-info strong { font-weight:700; display:block; margin-bottom:2px; font-size:13px; }
+
+/* CTA */
+.calc-btn {
+  width:100%; padding:15px;
+  background: var(--accent); border:none; border-radius:12px;
+  color:#fff; font-family:'DM Sans',sans-serif;
+  font-size:15px; font-weight:700; cursor:pointer;
+  transition:all .18s; letter-spacing:.01em;
+  box-shadow: 0 2px 8px rgba(37,99,235,.35);
+}
+.calc-btn:hover { background:#1D4ED8; box-shadow:0 4px 16px rgba(37,99,235,.5); transform:translateY(-1px); }
+.calc-btn:active { transform:translateY(0); }
+
+/* Results */
+#results { display:none; animation: fadeUp .35s ease; }
+@keyframes fadeUp { from{opacity:0;transform:translateY(16px)} to{opacity:1;transform:translateY(0)} }
+
+.result-header {
+  display:flex; align-items:center; justify-content:space-between;
+  margin-bottom:16px; flex-wrap:wrap; gap:8px;
+}
+.result-title { font-size:15px; font-weight:700; }
+.badges { display:flex; gap:6px; flex-wrap:wrap; }
+.badge {
+  font-size:11px; font-weight:700; padding:3px 10px;
+  border-radius:20px; letter-spacing:.04em;
+}
+.b-iso   { background:var(--yellow-l); color:var(--yellow); }
+.b-cross { background:var(--accent-l); color:var(--accent); }
+.b-long  { background:var(--green-l);  color:var(--green); }
+.b-short { background:var(--red-l);    color:var(--red); }
+
+/* Stat grid */
+.stat-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:8px; }
+@media(max-width:480px){ .stat-grid{ grid-template-columns:repeat(2,1fr); } }
+
+.stat {
+  background:var(--bg); border-radius:12px;
+  padding:14px; border:1px solid var(--border);
+  transition:box-shadow .15s;
+}
+.stat:hover { box-shadow:var(--shadow-md); }
+.sl { font-size:11px; color:var(--sub); font-weight:600; margin-bottom:6px; line-height:1.3; }
+.sv {
+  font-family:'DM Mono',monospace; font-size:16px;
+  font-weight:500; color:var(--text); line-height:1.2;
+}
+.sv.g { color:var(--green); }
+.sv.r { color:var(--red); }
+.sv.b { color:var(--accent); }
+.sv.a { color:var(--yellow); }
+.ss { font-size:11px; color:var(--light); margin-top:3px; font-family:'DM Mono',monospace; }
+.stat.liq-hi { border-color:#FECACA; background:#FEF2F2; }
+.stat.liq-hi .sl { color:var(--red); }
+
+/* RR */
+.rr-row {
+  display:flex; align-items:center; gap:12px;
+  background:var(--bg); border-radius:12px; padding:14px;
+  border:1px solid var(--border); margin-top:8px;
+}
+.rr-lbl { font-size:12px; color:var(--sub); font-weight:600; flex-shrink:0; }
+.rr-bar {
+  flex:1; height:8px; border-radius:4px;
+  background:var(--border); overflow:hidden; display:flex;
+}
+.rr-val { font-family:'DM Mono',monospace; font-size:13px; font-weight:500; flex-shrink:0; }
+
+/* Liq warn */
+.liq-warn {
+  display:flex; align-items:flex-start; gap:10px;
+  background:var(--red-l); border:1px solid #FECACA;
+  border-radius:10px; padding:12px 14px;
+  font-size:13px; color:#7F1D1D; line-height:1.6; margin-top:10px;
+}
+
+/* Table */
+.table-scroll { overflow-x:auto; }
+.sc-table { width:100%; border-collapse:collapse; font-size:13px; }
+.sc-table thead th {
+  font-size:11px; font-weight:700; text-transform:uppercase;
+  letter-spacing:.05em; color:var(--sub);
+  padding:8px 12px; text-align:left;
+  border-bottom:2px solid var(--border); white-space:nowrap;
+}
+.sc-table tbody td {
+  padding:10px 12px; border-bottom:1px solid var(--border);
+  font-family:'DM Mono',monospace;
+}
+.sc-table tbody tr:last-child td { border-bottom:none; }
+.sc-table tbody tr:hover td { background:var(--bg); }
+.sc-table .up   { color:var(--green); }
+.sc-table .dn   { color:var(--red); }
+.tag {
+  display:inline-block; font-size:10px; font-weight:700;
+  padding:2px 6px; border-radius:4px; font-family:'DM Sans',sans-serif;
+  margin-left:4px; vertical-align:middle;
+}
+.t-liq { background:#FEE2E2; color:#B91C1C; }
+.t-tp  { background:#D1FAE5; color:#065F46; }
+.t-sl  { background:#FEE2E2; color:#991B1B; }
+</style>
+</head>
+<body>
+<div class="app">
+
+  <!-- Header -->
+  <div class="header">
+    <div class="header-left">
+      <div class="logo">📊</div>
+      <div>
+        <h1>Futures Calculator</h1>
+        <p>Hitung posisi sebelum open trade</p>
+      </div>
+    </div>
+    <div class="seg" id="modeToggle">
+      <button class="seg-btn active" onclick="setMode('isolated')">🔒 Isolated</button>
+      <button class="seg-btn" onclick="setMode('cross')">🌐 Cross</button>
+    </div>
+  </div>
+
+  <!-- Card 1: Modal -->
+  <div class="card">
+    <div class="card-label">💰 Modal</div>
+    <div class="row">
+      <div class="field">
+        <label>Saldo Wallet</label>
+        <div class="input-box">
+          <input type="number" id="balance" value="1000" min="0" step="0.01" oninput="onBalanceChange()">
+          <span class="unit">USDT</span>
+        </div>
+      </div>
+      <div class="field">
+        <label>Margin Digunakan</label>
+        <div class="input-box">
+          <input type="number" id="marginVal" value="50" min="0" step="0.01" oninput="onMarginChange()">
+          <div class="margin-mode">
+            <button class="mmode-btn active" id="btnPct"  onclick="switchMM('pct')">%</button>
+            <button class="mmode-btn"        id="btnUsdt" onclick="switchMM('usdt')">USDT</button>
+          </div>
+        </div>
+        <span class="hint ok" id="mHint">= 500.00 USDT</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Card 2: Harga -->
+  <div class="card">
+    <div class="card-label">📈 Harga</div>
+    <div class="row3">
+      <div class="field">
+        <label>Entry</label>
+        <div class="input-box">
+          <input type="number" id="entryPrice" value="50000" min="0" step="0.01" oninput="onPriceChange()">
+          <span class="unit">$</span>
+        </div>
+        <span class="hint info" id="entryHint">&nbsp;</span>
+      </div>
+      <div class="field">
+        <label>Take Profit ✦</label>
+        <div class="input-box" id="tpBox">
+          <input type="number" id="tpPrice" value="52500" min="0" step="0.01" oninput="onPriceChange()">
+          <span class="unit" style="color:var(--green)">$</span>
+        </div>
+        <span class="hint ok" id="tpHint">+5.00%</span>
+      </div>
+      <div class="field">
+        <label>Stop Loss ✦</label>
+        <div class="input-box" id="slBox">
+          <input type="number" id="slPrice" value="48500" min="0" step="0.01" oninput="onPriceChange()">
+          <span class="unit" style="color:var(--red)">$</span>
+        </div>
+        <span class="hint" id="slHint" style="color:var(--red)">−3.00%</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Card 3: Leverage & Arah -->
+  <div class="card">
+    <div class="card-label">⚡ Leverage & Arah</div>
+
+    <div class="dir-row" style="margin-bottom:18px">
+      <button class="dir-btn long active" id="dLong"  onclick="setDir('long')">▲ Long</button>
+      <button class="dir-btn short"       id="dShort" onclick="setDir('short')">▼ Short</button>
+    </div>
+
+    <div class="lev-header">
+      <div>
+        <div class="lev-val" id="levDisp">10×</div>
+        <div class="lev-sub">Leverage</div>
+      </div>
+      <span class="lev-risk risk-med" id="riskBadge">Sedang</span>
+    </div>
+    <input type="range" id="levSlider" min="1" max="125" value="10" oninput="onLevSlide()">
+    <div class="lev-presets">
+      <button class="lp" onclick="setLev(1)">1×</button>
+      <button class="lp" onclick="setLev(2)">2×</button>
+      <button class="lp" onclick="setLev(3)">3×</button>
+      <button class="lp" onclick="setLev(5)">5×</button>
+      <button class="lp active" onclick="setLev(10)">10×</button>
+      <button class="lp" onclick="setLev(20)">20×</button>
+      <button class="lp" onclick="setLev(50)">50×</button>
+      <button class="lp" onclick="setLev(100)">100×</button>
+      <button class="lp" onclick="setLev(125)">125×</button>
+    </div>
+
+    <div class="divider"></div>
+
+    <div class="field" style="max-width:180px">
+      <label>Taker Fee</label>
+      <div class="input-box">
+        <input type="number" id="feeRate" value="0.05" min="0" max="1" step="0.01">
+        <span class="unit">%</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Mode info banner -->
+  <div class="mode-info isolated" id="modeInfo">
+    <span class="mode-icon">🔒</span>
+    <div>
+      <strong>Isolated Margin</strong>
+      Risiko terbatas hanya pada margin yang kamu alokasikan. Sisa saldo aman meski kena likuidasi.
+    </div>
+  </div>
+
+  <button class="calc-btn" onclick="calculate()">Hitung Posisi →</button>
+
+  <!-- ═══ RESULTS ═══ -->
+  <div id="results">
+    <div style="height:14px"></div>
+
+    <div class="card">
+      <div class="result-header">
+        <span class="result-title">Ringkasan Posisi</span>
+        <div class="badges">
+          <span class="badge b-iso"  id="rMode">ISOLATED</span>
+          <span class="badge b-long" id="rDir">LONG</span>
+        </div>
+      </div>
+      <div class="stat-grid" id="statsGrid"></div>
+      <div id="rrRow"></div>
+      <div id="liqWarn"></div>
+    </div>
+
+    <div class="card">
+      <div class="card-label">📋 Skenario PnL</div>
+      <div class="table-scroll">
+        <table class="sc-table" id="scTable"></table>
+      </div>
+    </div>
+  </div>
+
+</div>
+<script>
+let mode='isolated', dir='long', lev=10, mm='pct';
+
+function setMode(m){
+  mode=m;
+  document.querySelectorAll('#modeToggle .seg-btn').forEach((b,i)=>{
+    b.classList.toggle('active',(i===0&&m==='isolated')||(i===1&&m==='cross'));
+  });
+  const el=document.getElementById('modeInfo');
+  if(m==='isolated'){
+    el.className='mode-info isolated';
+    el.innerHTML=`<span class="mode-icon">🔒</span><div><strong>Isolated Margin</strong>Risiko terbatas hanya pada margin yang dialokasikan. Sisa saldo aman meski kena likuidasi.</div>`;
+  } else {
+    el.className='mode-info cross';
+    el.innerHTML=`<span class="mode-icon">🌐</span><div><strong>Cross Margin</strong>Seluruh saldo dijadikan jaminan — harga likuidasi lebih jauh, tapi seluruh saldo bisa hilang.</div>`;
+  }
+}
+
+function setDir(d){
+  dir=d;
+  document.getElementById('dLong').className ='dir-btn long' +(d==='long' ?' active':'');
+  document.getElementById('dShort').className='dir-btn short'+(d==='short'?' active':'');
+  onPriceChange();
+}
+
+function setLev(v){ lev=v; document.getElementById('levSlider').value=v; refreshLev(); }
+function onLevSlide(){ lev=parseInt(document.getElementById('levSlider').value); refreshLev(); }
+function refreshLev(){
+  document.getElementById('levDisp').textContent=lev+'×';
+  const pct=((lev-1)/124)*100;
+  document.getElementById('levSlider').style.background=
+    `linear-gradient(to right,var(--accent) 0%,var(--accent) ${pct}%,var(--border) ${pct}%,var(--border) 100%)`;
+  document.querySelectorAll('.lp').forEach(b=>b.classList.toggle('active',parseInt(b.textContent)===lev));
+  const rb=document.getElementById('riskBadge');
+  if(lev<=3)      {rb.textContent='Rendah'; rb.className='lev-risk risk-low';}
+  else if(lev<=10){rb.textContent='Sedang'; rb.className='lev-risk risk-med';}
+  else if(lev<=25){rb.textContent='Tinggi'; rb.className='lev-risk risk-high';}
+  else            {rb.textContent='Ekstrem';rb.className='lev-risk risk-high';}
+}
+
+function switchMM(m){
+  mm=m;
+  document.getElementById('btnPct').classList.toggle('active',m==='pct');
+  document.getElementById('btnUsdt').classList.toggle('active',m==='usdt');
+  onMarginChange();
+}
+function getMargin(){
+  const bal=parseFloat(document.getElementById('balance').value)||0;
+  const val=parseFloat(document.getElementById('marginVal').value)||0;
+  return mm==='pct'? bal*(val/100): Math.min(val,bal);
+}
+function onMarginChange(){ updateMHint(); }
+function onBalanceChange(){ updateMHint(); }
+function updateMHint(){
+  const bal=parseFloat(document.getElementById('balance').value)||0;
+  const val=parseFloat(document.getElementById('marginVal').value)||0;
+  const h=document.getElementById('mHint');
+  if(mm==='pct'){
+    const u=bal*(val/100);
+    h.textContent=`= ${u.toFixed(2)} USDT`;
+    h.className= val>100?'hint warn':'hint ok';
+  } else {
+    const p=bal>0?(val/bal*100):0;
+    h.textContent=`= ${p.toFixed(1)}% dari saldo`;
+    h.className= val>bal?'hint warn':'hint ok';
+  }
+}
+
+function onPriceChange(){
+  const e=parseFloat(document.getElementById('entryPrice').value)||0;
+  const t=parseFloat(document.getElementById('tpPrice').value)||0;
+  const s=parseFloat(document.getElementById('slPrice').value)||0;
+  if(!e) return;
+  const tp=((t-e)/e)*100, sl=((s-e)/e)*100;
+  const th=document.getElementById('tpHint'), sh=document.getElementById('slHint');
+  th.textContent=(tp>=0?'+':'')+tp.toFixed(2)+'%'; th.className=tp>=0?'hint ok':'hint';
+  sh.textContent=(sl>=0?'+':'')+sl.toFixed(2)+'%'; sh.style.color=sl<=0?'var(--red)':'var(--green)';
+}
+
+function fmt(n,d=2){
+  if(isNaN(n)||!isFinite(n))return'–';
+  const a=Math.abs(n);
+  if(a>=1e6) return (n/1e6).toFixed(2)+'M';
+  if(a>=1000) return n.toLocaleString('id-ID',{minimumFractionDigits:d,maximumFractionDigits:d});
+  return n.toFixed(d);
+}
+const sgn=n=>n>=0?'+':'';
+
+function calculate(){
+  const bal  =parseFloat(document.getElementById('balance').value)||0;
+  const entry=parseFloat(document.getElementById('entryPrice').value)||0;
+  const tp   =parseFloat(document.getElementById('tpPrice').value)||0;
+  const sl   =parseFloat(document.getElementById('slPrice').value)||0;
+  const fee  =(parseFloat(document.getElementById('feeRate').value)||0)/100;
+  if(!bal||!entry) return;
+
+  const margin  =getMargin();
+  const pos     =margin*lev;
+  const qty     =pos/entry;
+  const eFee    =pos*fee;
+  const mmRate  =0.005;
+  const liqP    =dir==='long'? entry*(1-1/lev+mmRate): entry*(1+1/lev-mmRate);
+  const liqDist =Math.abs((liqP-entry)/entry)*100;
+
+  const tpDiff  =dir==='long'? tp-entry: entry-tp;
+  const slDiff  =dir==='long'? sl-entry: entry-sl;
+  const pTP     =tpDiff*qty - eFee - pos*fee;
+  const pSL_raw =slDiff*qty - eFee - pos*fee;
+  const maxL    =mode==='isolated'? -margin: -bal;
+  const pSL     =Math.max(pSL_raw, maxL);
+  const roiTP   =(pTP/margin)*100;
+  const roiSL   =(pSL/margin)*100;
+  const rr      =pTP>0&&pSL<0? Math.abs(pTP/pSL): 0;
+
+  // Stats
+  const stats=[
+    {l:'Ukuran Posisi',    v:fmt(pos)+' USDT',   s:'margin × '+lev+'×', c:''},
+    {l:'Jumlah Aset',      v:fmt(qty,6),          s:'@ '+fmt(entry)+' USDT', c:''},
+    {l:'Margin',           v:fmt(margin)+' USDT', s:fmt(margin/bal*100,1)+'% dari saldo', c:'b'},
+    {l:'Harga Likuidasi',  v:fmt(liqP)+' USDT',   s:'jarak '+fmt(liqDist,2)+'%',
+      c:liqDist<5?'r':liqDist<15?'a':'', liq:liqDist<10},
+    {l:'PnL di Take Profit',v:sgn(pTP)+fmt(pTP)+' USDT', s:sgn(roiTP)+fmt(roiTP,2)+'% ROI', c:pTP>=0?'g':'r'},
+    {l:'PnL di Stop Loss',  v:sgn(pSL)+fmt(pSL)+' USDT', s:sgn(roiSL)+fmt(roiSL,2)+'% ROI', c:pSL>=0?'g':'r'},
+  ];
+  document.getElementById('statsGrid').innerHTML=stats.map(s=>`
+    <div class="stat ${s.liq?'liq-hi':''}">
+      <div class="sl">${s.l}</div>
+      <div class="sv ${s.c}">${s.v}</div>
+      <div class="ss">${s.s}</div>
+    </div>`).join('');
+
+  // RR bar
+  const la=Math.abs(pSL), ga=Math.abs(pTP), tot=la+ga;
+  const lp2=tot>0?(la/tot*100).toFixed(1):50, gp2=tot>0?(ga/tot*100).toFixed(1):50;
+  document.getElementById('rrRow').innerHTML=`
+    <div class="rr-row">
+      <span class="rr-lbl">Risk / Reward</span>
+      <div class="rr-bar">
+        <div style="width:${lp2}%;background:var(--red)"></div>
+        <div style="width:${gp2}%;background:var(--green)"></div>
+      </div>
+      <span class="rr-val">${rr>0?'1 : '+fmt(rr,2):'–'}</span>
+    </div>`;
+
+  document.getElementById('liqWarn').innerHTML=liqDist<10?`
+    <div class="liq-warn">⚠️
+      <div>Harga likuidasi hanya <strong>${fmt(liqDist,2)}%</strong> dari entry. 
+      Kurangi leverage atau tambah margin agar posisi lebih aman.</div>
+    </div>`:'';
+
+  document.getElementById('rMode').textContent=mode==='isolated'?'ISOLATED':'CROSS';
+  document.getElementById('rMode').className='badge '+(mode==='isolated'?'b-iso':'b-cross');
+  document.getElementById('rDir').textContent=dir.toUpperCase();
+  document.getElementById('rDir').className='badge '+(dir==='long'?'b-long':'b-short');
+
+  // Scenarios
+  const rows=[
+    {pct:20},{pct:10},{pct:5},{pct:2},{pct:1},{pct:0.5},
+    {pct:-0.5},{pct:-1},{pct:-2},{pct:-5},{pct:-10},{pct:-20}
+  ].map(sc=>{
+    const np   =entry*(1+sc.pct/100);
+    const diff =dir==='long'? np-entry: entry-np;
+    const raw  =diff*qty - eFee - pos*fee;
+    const cap  =mode==='isolated'? Math.max(raw,-margin): Math.max(raw,-bal);
+    const roi  =(cap/margin)*100;
+    const nb   =mode==='isolated'? bal-margin+margin+cap: bal+cap;
+    const isLiq=dir==='long'? np<=liqP: np>=liqP;
+    const isTP =tp>0&&(dir==='long'? np>=tp: np<=tp);
+    const isSL =sl>0&&(dir==='long'? np<=sl: np>=sl);
+    const cl   =cap>=0?'up':'dn';
+    const tag  =isLiq?'<span class="tag t-liq">LIQ</span>':
+                 isTP ?'<span class="tag t-tp">TP</span>':
+                 isSL ?'<span class="tag t-sl">SL</span>':'';
+    const lbl  =(sc.pct>0?'+':'')+sc.pct+'%';
+    return `<tr>
+      <td>${lbl}${tag}</td>
+      <td>${fmt(np)}</td>
+      <td class="${cl}">${sgn(cap)}${fmt(cap)} USDT</td>
+      <td class="${cl}">${sgn(roi)}${fmt(roi,2)}%</td>
+      <td>${fmt(Math.max(nb,0))} USDT</td>
+    </tr>`;
+  });
+  document.getElementById('scTable').innerHTML=`
+    <thead><tr>
+      <th>Pergerakan</th><th>Harga</th><th>PnL</th><th>ROI</th><th>Saldo Akhir</th>
+    </tr></thead>
+    <tbody>${rows.join('')}</tbody>`;
+
+  const r=document.getElementById('results');
+  r.style.display='block';
+  r.scrollIntoView({behavior:'smooth',block:'start'});
+}
+
+window.onload=()=>{ updateMHint(); onPriceChange(); refreshLev(); calculate(); };
+</script>
+</body>
+</html>
